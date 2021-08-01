@@ -1,0 +1,12 @@
+{
+  "python.linting.pylintCategorySeverity.convention": "Information",
+  "python.linting.pylintCategorySeverity.error": "Error",
+  "python.linting.pylintCategorySeverity.fatal": "Error",
+  "python.linting.pylintCategorySeverity.refactor": "Hint",
+  "python.linting.pylintCategorySeverity.warning": "Warning",
+  "python.linting.pylintEnabled": true,
+  "python.linting.enabled": true,
+  "python.linting.pylintArgs": [
+    "--rcfile=.pylintrc"
+  ]
+}
