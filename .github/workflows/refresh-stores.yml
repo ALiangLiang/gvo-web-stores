@@ -1,6 +1,6 @@
-name: Build and Deploy
+name: Refresh stores data
 on:
-  workflow_dispatch
+  workflow_dispatch:
   schedule:
     # 03:00 - (+8 timezone) = 17:00
     - cron:  '0 17 * * *'
