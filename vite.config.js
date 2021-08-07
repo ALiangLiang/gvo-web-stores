@@ -5,5 +5,8 @@ import vue from '@vitejs/plugin-vue'
  */
 export default {
   plugins: [vue()],
-  base: '/gvo-web-stores'
+  base: '/gvo-web-stores/',
+  server: {
+    port: 3300,
+  }
 }
