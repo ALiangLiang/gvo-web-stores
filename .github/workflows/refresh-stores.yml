@@ -5,7 +5,7 @@ on:
     # 03:00 - (+8 timezone) = 17:00
     - cron:  '0 17 * * *'
 jobs:
-  build-and-deploy:
+  run:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
@@ -16,13 +16,14 @@ jobs:
         with:
           python-version: 3.9.6
 
-      - name: Install and Build 🔧 # This example project is built using npm and outputs the result to the 'build' folder. Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
-        env: # Or as an environment variable
+      - name: Install 🔧
+        run: pip install -r requirements.txt
+
+      - name: Run 🚀
+        env:
           USER: ${{ secrets.USER }}
           PASS: ${{ secrets.PASS }}
-        run: |
-          pip install -r requirements.txt
-          python app.py
+        run: python app.py
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@4.1.4
