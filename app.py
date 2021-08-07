@@ -215,10 +215,11 @@ class WebGvo:
             ) as resp:
                 results = []
                 coros = []
+                product_amount: int = 0
                 soup = BeautifulSoup(await resp.text(), 'html.parser')
                 tags = soup.find(id='shop0')
                 if tags is None:
-                    return results
+                    return results, 0
 
                 tags = tags.find_all('td', attrs={'width': '225'})
                 for tag in tags:
@@ -236,18 +237,24 @@ class WebGvo:
                         }
 
                     r = await search_company(name, town_id, cid)
+                    product_amount += len(r['products'])
                     results.append(r)
                     # coros.append(asyncio.ensure_future(search_company(asyncio_semaphore, name, town_id, cid)))
 
                 # result = await asyncio.gather(*coros)
-                return results
+                return results, product_amount
 
 async def main():
     async with WebGvo() as web_gvo:
         await web_gvo.login()
 
+        servers = {}
+        directory = f'dist/data/'
+
         server_ids_names = await web_gvo.get_server_ids_names()
         for server_id, server_name in server_ids_names:
+            servers[server_name] = server = {}
+
             charater_ids = await web_gvo.get_charater_ids(server_id)
             if len(charater_ids) == 0:
                 logger.warning('No charater found in server %s', server_name)
@@ -261,21 +268,26 @@ async def main():
                 continue
 
             for town_id, town_name in town_ids_names:
-                directory = f'dist/data/'
+                server[town_name] = 0
+
                 if not os.path.exists(directory):
                     os.makedirs(directory)
-                file_path = f'{directory}/{str(server_name)}-{town_name}.json'
-                if os.path.isfile(file_path):
-                    companies = []
-                else:
-                    companies = await web_gvo.search_town(town_id)
+                file_path = f'{directory}{str(server_name)}-{town_name}.json'
+                companies, amount = await web_gvo.search_town(town_id)
+
+                server[town_name] = amount
             
                 with open(file_path, 'w', encoding='utf-8') as file:
-                    file.write(json.dumps({
-                        'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                        'companies': companies
-                    }))
+                    file.write(
+                        json.dumps({
+                            'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                            'companies': companies
+                        })
+                    )
 
-if __name__ == '__main__': 
+                with open(directory + 'stats.json', 'w', encoding='utf-8') as file:
+                    file.write(json.dumps(servers))
+
+if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
