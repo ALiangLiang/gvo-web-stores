@@ -1,55 +1,122 @@
 <template>
-  <el-button @click="resetDateFilter">清除日期过滤器</el-button>
-  <el-button @click="clearFilter">清除所有过滤器</el-button>
+  <el-input v-model="search" size="mini" placeholder="商品關鍵字" />
   <el-table
     row-key="date"
     ref="filterTable"
-    :data="tableData"
+    :data="
+      tableData.slice((currentPage - 1) * pagesize, currentPage * pagesize)
+    "
     style="width: 100%"
   >
     <el-table-column
-      prop="date"
-      label="日期"
+      prop="updatedAt"
+      label="更新日期"
       sortable
       width="180"
       column-key="date"
-      :filters="[
-        { text: '2016-05-01', value: '2016-05-01' },
-        { text: '2016-05-02', value: '2016-05-02' },
-        { text: '2016-05-03', value: '2016-05-03' },
-        { text: '2016-05-04', value: '2016-05-04' },
-      ]"
-      :filter-multiple="false"
-      :filter-method="filterHandler"
     >
-    </el-table-column>
-    <el-table-column prop="name" label="姓名" width="180"> </el-table-column>
-    <el-table-column prop="address" label="地址" :formatter="formatter">
     </el-table-column>
     <el-table-column
-      prop="tag"
-      label="标签"
-      width="100"
+      prop="serverName"
+      label="伺服器"
+      width="180"
       :filters="[
-        { text: '家', value: '家' },
-        { text: '公司', value: '公司' },
+        { text: '護衛艦', value: '護衛艦(推薦)' },
+        { text: '探索號', value: '探索號(推薦)' },
+        { text: '幽靈船', value: '幽靈船' },
+        { text: '戰列艦', value: '戰列艦' },
       ]"
-      :filter-method="filterTag"
-      filter-placement="bottom-end"
+      :filter-method="filterServerName"
     >
-      <template #default="scope">
-        <el-tag
-          :type="scope.row.tag === '家' ? 'primary' : 'success'"
-          disable-transitions
-          >{{ scope.row.tag }}</el-tag
-        >
-      </template>
+    </el-table-column>
+    <el-table-column prop="townName" label="港口"> </el-table-column>
+    <el-table-column prop="companyName" label="商會"> </el-table-column>
+    <el-table-column prop="productName" label="商品"> </el-table-column>
+    <el-table-column prop="productAmount" label="數量"> </el-table-column>
+    <el-table-column
+      prop="productUnitPrice"
+      label="價格"
+      :formatter="formatPrice"
+    >
     </el-table-column>
   </el-table>
+  <el-pagination
+    background
+    layout="prev, pager, next"
+    :total="tableData.length"
+    :page-size="pagesize"
+    @current-change="onChangePage"
+  >
+  </el-pagination>
 </template>
 
 <script setup>
-import HelloWorld from "./components/HelloWorld.vue";
+import axios from "axios";
+import { ref, computed, onMounted } from "vue";
+
+const tableData = ref([]);
+const currentPage = ref(1);
+const pagesize = ref(10);
+
+async function formatCompanies({ companies, serverName, townName, updatedAt }) {
+  const rows = [];
+  for (let company of companies) {
+    for (let prod of company.products) {
+      rows.push({
+        updatedAt,
+        serverName,
+        townName,
+        companyName: company.company_name,
+        productName: prod.name,
+        productAmount: prod.amount,
+        productUnitPrice: prod.unit_price,
+      });
+    }
+  }
+  return rows;
+}
+
+onMounted(async function () {
+  const { data: servers } = await axios.get("data/stats.json");
+  let rows = [];
+  for (let serverName in servers) {
+    const server = servers[serverName];
+    for (let townName in server) {
+      const totalProductsInTown = server[townName];
+      if (totalProductsInTown === 0) {
+        continue;
+      }
+
+      const { data } = await axios.get(`data/${serverName}-${townName}.json`);
+      const { companies, updated_at: updatedAt } = data;
+      rows = rows.concat(
+        await formatCompanies({
+          companies,
+          serverName,
+          townName,
+          updatedAt,
+        })
+      );
+    }
+  }
+  console.log(rows);
+  tableData.value = rows;
+});
+
+function filterServerName(value, row, column) {
+  const property = column["serverName"];
+  return row[property] === value;
+}
+
+function formatPrice(row, column, cellValue, index) {
+  const formatter = new Intl.NumberFormat();
+  return formatter.format(Number(cellValue));
+}
+
+function onChangePage(page) {
+  console.log(page);
+  currentPage.value = page;
+}
 </script>
 
 <style>
