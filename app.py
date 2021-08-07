@@ -271,7 +271,10 @@ async def main():
                     companies = await web_gvo.search_town(town_id)
             
                 with open(file_path, 'w', encoding='utf-8') as file:
-                    file.write(json.dumps(companies))
+                    file.write(json.dumps({
+                        'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        'companies': companies
+                    }))
 
 if __name__ == '__main__': 
     loop = asyncio.get_event_loop()
