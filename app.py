@@ -261,8 +261,7 @@ async def main():
                 continue
 
             for town_id, town_name in town_ids_names:
-                today_str = datetime.today().strftime('%Y-%m-%d')
-                directory = f'docs/{today_str}'
+                directory = f'dist/data/'
                 if not os.path.exists(directory):
                     os.makedirs(directory)
                 file_path = f'{directory}/{str(server_name)}-{town_name}.json'
