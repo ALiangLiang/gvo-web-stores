@@ -6,7 +6,7 @@
   />
   <el-table
     row-key="date"
-    :data="tableData"
+    :data="pagedTableData"
     style="width: 100%"
     @sort-change="onChangeSort"
     @filter-change="onChangeFilter"
@@ -23,13 +23,16 @@
       width="180"
       column-key="serverName"
       :filters="filteredServerNames"
-      :filtered-value="filteredServerValue"
+      :filter-method="filterHandler"
+      :filtered-value="selectedServers"
     />
     <el-table-column
       prop="townName"
       label="港口"
+      column-key="townName"
       :filters="filteredTownNames"
-      :filtered-value="filteredTownValue"
+      :filter-method="filterHandler"
+      :filtered-value="selectedTowns"
     />
     <el-table-column
       prop="companyName"
@@ -54,7 +57,7 @@
     background
     layout="prev, pager, next"
     :total="tableData.length"
-    :page-size="pageSize"
+    :page-size="pageSize.value"
     @current-change="onChangePage"
   />
 </template>
@@ -68,16 +71,18 @@ const productsData = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const search = ref('')
-const filteredServerValue = ref([])
+const selectedServers = ref([])
+const serverNames = ref([])
 const filteredServerNames = computed(() =>
-  filteredServerValue.value.map((serverName) => ({
+  serverNames.value.map((serverName) => ({
     text: serverName,
     value: serverName
   }))
 )
-const filteredTownValue = ref([])
+const selectedTowns = ref([])
+const townNames = ref([])
 const filteredTownNames = computed(() =>
-  filteredTownValue.value.map((townName) => ({
+  townNames.value.map((townName) => ({
     text: townName,
     value: townName
   }))
@@ -107,15 +112,15 @@ onMounted(async function () {
 
   const { data: servers } = await axios.get('data/stats.json')
   let rows = []
-  filteredServerValue.value = []
-  filteredTownValue.value = []
+  serverNames.value = []
+  townNames.value = []
   for (const serverName in servers) {
-    filteredServerValue.value.push(serverName)
+    serverNames.value.push(serverName)
 
     const server = servers[serverName]
     for (const townName in server) {
-      if (filteredTownValue.value.indexOf(townName) === -1) {
-        filteredTownValue.value.push(townName)
+      if (townNames.value.indexOf(townName) === -1) {
+        townNames.value.push(townName)
       }
 
       const totalProductsInTown = server[townName]
@@ -137,29 +142,37 @@ onMounted(async function () {
   }
   productsData.value = rows
 
-  nextTick(() => { // 以服务的方式调用的 Loading 需要异步关闭
-    loadingInstance.close()
-  })
+  selectedServers.value = serverNames.value
+  selectedTowns.value = townNames.value
+  console.log(selectedServers.value, selectedTowns.value)
+
+  nextTick(() => loadingInstance.close())
 })
 
 const tableData = computed(function () {
+  console.log(selectedServers, selectedServers.value)
   const filtered = productsData.value.filter((row) => {
     // Filtered by search
     if (search.value !== '' && !row.productName.match(search.value)) {
-      console.log(search.value)
       return false
     }
 
     // Filtered by server name
-    if (filteredServerValue.value.indexOf(row.serverName) === -1) {
+    if (selectedServers.value.indexOf(row.serverName) === -1) {
+      return false
+    }
+
+    // Filtered by town name
+    if (selectedTowns.value.indexOf(row.townName) === -1) {
       return false
     }
 
     return true
   })
+  console.log(filtered)
 
   // Sort by price
-  const sorted = filtered.sort((a, b) => {
+  return filtered.sort((a, b) => {
     if (priceOrder.value === 'ascending') {
       return a.productUnitPrice - b.productUnitPrice
     } else if (priceOrder.value === 'descending') {
@@ -167,8 +180,10 @@ const tableData = computed(function () {
     }
     return 0
   })
+})
 
-  return sorted.slice(
+const pagedTableData = computed(function () {
+  return tableData.value.slice(
     (currentPage.value - 1) * pageSize.value,
     currentPage.value * pageSize.value
   )
@@ -180,6 +195,7 @@ function formatPrice (row, column, cellValue, index) {
 }
 
 function onChangePage (page) {
+  console.log('onChangePage', page)
   currentPage.value = page
 }
 
@@ -190,7 +206,17 @@ function onChangeSort ({ column, prop, order }) {
 }
 
 function onChangeFilter (filters) {
-  filteredServerValue.value = filters.serverName
+  console.log(filters)
+  if (filters.serverName) {
+    selectedServers.value = filters.serverName
+  }
+  if (filters.townName) {
+    selectedTowns.value = filters.townName
+  }
+}
+
+function filterHandler () {
+  return true
 }
 </script>
 
@@ -202,8 +228,5 @@ function onChangeFilter (filters) {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
-}
-.element-plus-logo {
-  width: 50%;
 }
 </style>
