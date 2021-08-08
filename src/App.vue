@@ -7,12 +7,13 @@
   <el-table
     row-key="date"
     :data="
-      filteredTableData.slice(
+      handledTableData.slice(
         (currentPage - 1) * pagesize,
         currentPage * pagesize
       )
     "
     style="width: 100%"
+    @sort-change="onChangeSort"
   >
     <el-table-column
       prop="updatedAt"
@@ -50,6 +51,7 @@
     />
     <el-table-column
       prop="productUnitPrice"
+      sortable
       label="價格"
       :formatter="formatPrice"
     />
@@ -57,7 +59,7 @@
   <el-pagination
     background
     layout="prev, pager, next"
-    :total="filteredTableData.length"
+    :total="handledTableData.length"
     :page-size="pagesize"
     @current-change="onChangePage"
   />
@@ -71,6 +73,7 @@ const tableData = ref([])
 const currentPage = ref(1)
 const pagesize = ref(10)
 const search = ref('')
+const priceOrder = ref(null)
 
 async function formatCompanies ({ companies, serverName, townName, updatedAt }) {
   const rows = []
@@ -116,12 +119,20 @@ onMounted(async function () {
   tableData.value = rows
 })
 
-const filteredTableData = computed(function () {
-  return tableData.value.filter((row) => {
+const handledTableData = computed(function () {
+  const filtered = tableData.value.filter((row) => {
     if (search.value !== '') {
       return row.productName.match(search.value)
     }
     return true
+  })
+  return filtered.sort((a, b) => {
+    if (priceOrder.value === 'ascending') {
+      return a.productUnitPrice - b.productUnitPrice
+    } else if (priceOrder.value === 'descending') {
+      return b.productUnitPrice - a.productUnitPrice
+    }
+    return 0
   })
 })
 
@@ -133,6 +144,12 @@ function formatPrice (row, column, cellValue, index) {
 function onChangePage (page) {
   console.log(page)
   currentPage.value = page
+}
+
+function onChangeSort ({ column, prop, order }) {
+  if (prop === 'productUnitPrice') {
+    priceOrder.value = order
+  }
 }
 </script>
 
