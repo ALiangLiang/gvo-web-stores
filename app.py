@@ -2,6 +2,7 @@ import os
 import re
 import json
 from datetime import datetime
+from typing import List, Tuple
 from urllib.parse import urlparse, parse_qs
 import logging
 import time
@@ -90,7 +91,7 @@ class WebGvo:
             ):
                 pass
 
-    async def get_server_ids_names(self) -> list[tuple[int, str]]:
+    async def get_server_ids_names(self) -> List[Tuple[int, str]]:
         async with self.session.post(
                 'http://webgvo.wasabii.com.tw/dol/web/d', 
                 data={
@@ -146,7 +147,7 @@ class WebGvo:
             ) as resp:
                 pass
 
-    async def search_company(self, tid: int, cid: int) -> list[dict]:
+    async def search_company(self, tid: int, cid: int) -> List[dict]:
         async with self.session.post(
                 'http://webgvo.wasabii.com.tw/dol/web/d', 
                 data={
@@ -178,7 +179,7 @@ class WebGvo:
                     })
                 return products
 
-    async def get_town_ids_names(self) -> list[tuple[int, str]]:
+    async def get_town_ids_names(self) -> List[Tuple[int, str]]:
         coros = []
         # 搜尋城市裡的商會
         async with self.session.post(
