@@ -66,6 +66,7 @@
 import axios from 'axios'
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { ElLoading } from 'element-plus'
+import { tify, sify } from 'chinese-conv'
 
 const productsData = ref([])
 const currentPage = ref(1)
@@ -144,16 +145,17 @@ onMounted(async function () {
 
   selectedServers.value = serverNames.value
   selectedTowns.value = townNames.value
-  console.log(selectedServers.value, selectedTowns.value)
 
   nextTick(() => loadingInstance.close())
 })
 
 const tableData = computed(function () {
-  console.log(selectedServers, selectedServers.value)
+  const traditionalChineseSearch = tify(search.value)
   const filtered = productsData.value.filter((row) => {
     // Filtered by search
-    if (search.value !== '' && !row.productName.match(search.value)) {
+    const tMatchS = row.productName.match(traditionalChineseSearch)
+    const sMatchT = sify(row.productName).match(search.value)
+    if (search.value !== '' && !(tMatchS || sMatchT)) {
       return false
     }
 
@@ -169,7 +171,6 @@ const tableData = computed(function () {
 
     return true
   })
-  console.log(filtered)
 
   // Sort by price
   return filtered.sort((a, b) => {
@@ -195,7 +196,6 @@ function formatPrice (row, column, cellValue, index) {
 }
 
 function onChangePage (page) {
-  console.log('onChangePage', page)
   currentPage.value = page
 }
 
@@ -206,7 +206,6 @@ function onChangeSort ({ column, prop, order }) {
 }
 
 function onChangeFilter (filters) {
-  console.log(filters)
   if (filters.serverName) {
     selectedServers.value = filters.serverName
   }
