@@ -22,17 +22,14 @@
       label="伺服器"
       width="180"
       column-key="serverName"
-      :filters="[
-        { text: '護衛艦(推薦)', value: '護衛艦(推薦)' },
-        { text: '探索號(推薦)', value: '探索號(推薦)' },
-        { text: '幽靈船', value: '幽靈船' },
-        { text: '戰列艦', value: '戰列艦' },
-      ]"
-      :filtered-value="filteredValue"
+      :filters="filteredServerNames"
+      :filtered-value="filteredServerValue"
     />
     <el-table-column
       prop="townName"
       label="港口"
+      :filters="filteredTownNames"
+      :filtered-value="filteredTownValue"
     />
     <el-table-column
       prop="companyName"
@@ -71,7 +68,20 @@ const productsData = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const search = ref('')
-const filteredValue = ref(['護衛艦(推薦)', '探索號(推薦)', '幽靈船', '戰列艦'])
+const filteredServerValue = ref([])
+const filteredServerNames = computed(() =>
+  filteredServerValue.value.map((serverName) => ({
+    text: serverName,
+    value: serverName
+  }))
+)
+const filteredTownValue = ref([])
+const filteredTownNames = computed(() =>
+  filteredTownValue.value.map((townName) => ({
+    text: townName,
+    value: townName
+  }))
+)
 const priceOrder = ref(null)
 
 async function formatCompanies ({ companies, serverName, townName, updatedAt }) {
@@ -97,9 +107,17 @@ onMounted(async function () {
 
   const { data: servers } = await axios.get('data/stats.json')
   let rows = []
+  filteredServerValue.value = []
+  filteredTownValue.value = []
   for (const serverName in servers) {
+    filteredServerValue.value.push(serverName)
+
     const server = servers[serverName]
     for (const townName in server) {
+      if (filteredTownValue.value.indexOf(townName) === -1) {
+        filteredTownValue.value.push(townName)
+      }
+
       const totalProductsInTown = server[townName]
       if (totalProductsInTown === 0) {
         continue
@@ -133,7 +151,7 @@ const tableData = computed(function () {
     }
 
     // Filtered by server name
-    if (filteredValue.value.indexOf(row.serverName) === -1) {
+    if (filteredServerValue.value.indexOf(row.serverName) === -1) {
       return false
     }
 
@@ -172,7 +190,7 @@ function onChangeSort ({ column, prop, order }) {
 }
 
 function onChangeFilter (filters) {
-  filteredValue.value = filters.serverName
+  filteredServerValue.value = filters.serverName
 }
 </script>
 
