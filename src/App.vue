@@ -6,19 +6,14 @@
   />
   <el-table
     row-key="date"
-    :data="
-      handledTableData.slice(
-        (currentPage - 1) * pagesize,
-        currentPage * pagesize
-      )
-    "
+    :data="tableData"
     style="width: 100%"
     @sort-change="onChangeSort"
+    @filter-change="onChangeFilter"
   >
     <el-table-column
       prop="updatedAt"
       label="更新日期"
-      sortable
       width="180"
       column-key="date"
     />
@@ -26,12 +21,14 @@
       prop="serverName"
       label="伺服器"
       width="180"
+      column-key="serverName"
       :filters="[
         { text: '護衛艦(推薦)', value: '護衛艦(推薦)' },
         { text: '探索號(推薦)', value: '探索號(推薦)' },
         { text: '幽靈船', value: '幽靈船' },
         { text: '戰列艦', value: '戰列艦' },
       ]"
+      :filtered-value="filteredValue"
     />
     <el-table-column
       prop="townName"
@@ -59,20 +56,22 @@
   <el-pagination
     background
     layout="prev, pager, next"
-    :total="handledTableData.length"
-    :page-size="pagesize"
+    :total="tableData.length"
+    :page-size="pageSize"
     @current-change="onChangePage"
   />
 </template>
 
 <script setup>
 import axios from 'axios'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
+import { ElLoading } from 'element-plus'
 
-const tableData = ref([])
+const productsData = ref([])
 const currentPage = ref(1)
-const pagesize = ref(10)
+const pageSize = ref(10)
 const search = ref('')
+const filteredValue = ref(['護衛艦(推薦)', '探索號(推薦)', '幽靈船', '戰列艦'])
 const priceOrder = ref(null)
 
 async function formatCompanies ({ companies, serverName, townName, updatedAt }) {
@@ -94,6 +93,8 @@ async function formatCompanies ({ companies, serverName, townName, updatedAt }) 
 }
 
 onMounted(async function () {
+  const loadingInstance = ElLoading.service()
+
   const { data: servers } = await axios.get('data/stats.json')
   let rows = []
   for (const serverName in servers) {
@@ -116,17 +117,31 @@ onMounted(async function () {
       )
     }
   }
-  tableData.value = rows
+  productsData.value = rows
+
+  nextTick(() => { // 以服务的方式调用的 Loading 需要异步关闭
+    loadingInstance.close()
+  })
 })
 
-const handledTableData = computed(function () {
-  const filtered = tableData.value.filter((row) => {
-    if (search.value !== '') {
-      return row.productName.match(search.value)
+const tableData = computed(function () {
+  const filtered = productsData.value.filter((row) => {
+    // Filtered by search
+    if (search.value !== '' && !row.productName.match(search.value)) {
+      console.log(search.value)
+      return false
     }
+
+    // Filtered by server name
+    if (filteredValue.value.indexOf(row.serverName) === -1) {
+      return false
+    }
+
     return true
   })
-  return filtered.sort((a, b) => {
+
+  // Sort by price
+  const sorted = filtered.sort((a, b) => {
     if (priceOrder.value === 'ascending') {
       return a.productUnitPrice - b.productUnitPrice
     } else if (priceOrder.value === 'descending') {
@@ -134,6 +149,11 @@ const handledTableData = computed(function () {
     }
     return 0
   })
+
+  return sorted.slice(
+    (currentPage.value - 1) * pageSize.value,
+    currentPage.value * pageSize.value
+  )
 })
 
 function formatPrice (row, column, cellValue, index) {
@@ -142,7 +162,6 @@ function formatPrice (row, column, cellValue, index) {
 }
 
 function onChangePage (page) {
-  console.log(page)
   currentPage.value = page
 }
 
@@ -150,6 +169,10 @@ function onChangeSort ({ column, prop, order }) {
   if (prop === 'productUnitPrice') {
     priceOrder.value = order
   }
+}
+
+function onChangeFilter (filters) {
+  filteredValue.value = filters.serverName
 }
 </script>
 
