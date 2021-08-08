@@ -2,7 +2,6 @@
   <el-input v-model="search" size="mini" placeholder="商品關鍵字" />
   <el-table
     row-key="date"
-    ref="filterTable"
     :data="
       tableData.slice((currentPage - 1) * pagesize, currentPage * pagesize)
     "
@@ -21,12 +20,11 @@
       label="伺服器"
       width="180"
       :filters="[
-        { text: '護衛艦', value: '護衛艦(推薦)' },
-        { text: '探索號', value: '探索號(推薦)' },
+        { text: '護衛艦(推薦)', value: '護衛艦(推薦)' },
+        { text: '探索號(推薦)', value: '探索號(推薦)' },
         { text: '幽靈船', value: '幽靈船' },
         { text: '戰列艦', value: '戰列艦' },
       ]"
-      :filter-method="filterServerName"
     >
     </el-table-column>
     <el-table-column prop="townName" label="港口"> </el-table-column>
@@ -52,11 +50,12 @@
 
 <script setup>
 import axios from "axios";
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 
 const tableData = ref([]);
 const currentPage = ref(1);
 const pagesize = ref(10);
+const search = ref("");
 
 async function formatCompanies({ companies, serverName, townName, updatedAt }) {
   const rows = [];
