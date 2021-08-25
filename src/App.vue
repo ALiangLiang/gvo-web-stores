@@ -65,11 +65,68 @@
       />
     </el-main>
     <el-footer>
-      使用說明：
-      <br>1. 非即時資料，此工具大概會在半夜三點（+8時區）自動更新資料
-      <br>2. 商品關鍵字支援簡體轉繁體中文搜尋
-      <br>3. 有 bug 可以<a href="https://github.com/ALiangLiang/gvo-web-stores/issues">開 issue</a> 回報
-      <br>4. 如果有興趣增添功能、修 bug 也歡迎 PR
+      <el-row>
+        <el-col :span="12">
+          📑 使用說明：
+          <br>1. 非即時資料，此工具大概會在半夜三點（+8時區）自動更新資料
+          <br>2. 商品關鍵字支援簡體轉繁體中文搜尋
+          <br>3. 有 bug 可以<a href="https://github.com/ALiangLiang/gvo-web-stores/issues">開 issue</a> 回報
+          <br>4. 如果有興趣增添功能、修 bug 也歡迎 PR
+        </el-col>
+        <el-col :span="12">
+          <el-row>
+            <el-col :span="24">
+              ☕ Donate 贊助：
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+              如果喜歡的話，也歡迎贊助支持，不然我也是得每個月課金才能用 @web 爬資料，也是有點成本呢，感謝各位~
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-link
+                type="warning"
+                href="https://merchant.twmp.com.tw:20443/addongw/p2p/getByToken?token=6f8139fa-4f91-4956-aad9-0c730c483394"
+                target="_blank"
+              >
+                台灣 Pay （110年底前免手續費）
+              </el-link>
+            </el-col>
+            <el-col :span="12">
+              <el-link
+                type="warning"
+                href="https://www.jkopay.com/transfer?j=Transfer:900923228"
+                target="_blank"
+              >
+                街口支付
+              </el-link>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-image
+                style="width: 200px; height: 200px"
+                src="assets/twpay-qrcode.png"
+                fit="fit"
+              />
+            </el-col>
+            <el-col :span="12">
+              <el-image
+                style="width: 200px; height: 200px"
+                src="assets/jkpay-qrcode.png"
+                fit="fit"
+              />
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+              如果有其他問題，可以至<a href="https://forum.gamer.com.tw/C.php?bsn=7200&snA=61970&tnum=1">巴哈討論串</a>下留言
+            </el-col>
+          </el-row>
+        </el-col>
+      </el-row>
     </el-footer>
   </el-container>
 </template>
