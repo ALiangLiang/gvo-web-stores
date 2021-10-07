@@ -88,8 +88,9 @@ class WebGvo:
                     'log.x': '77',
                     'log.y': '8'
                 }
-            ):
-                pass
+            ) as resp:
+                if '很抱歉，本功能需上月有付費記錄的帳號，方可使用。' in await resp.text():
+                    raise Exception('Cannot login with account which doesn\'t consumed last month.')
 
     async def get_server_ids_names(self) -> List[Tuple[int, str]]:
         async with self.session.post(
