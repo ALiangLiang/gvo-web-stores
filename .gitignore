@@ -1,7 +1,9 @@
 .venv
 public/data/
+start.sh
 
 node_modules
 .DS_Store
 dist
 *.local
+
